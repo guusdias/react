@@ -6,17 +6,19 @@ import {
   CloseIcon,
   SearchIcon,
 } from "./styles";
-import { useTasksContext } from "../../context/TasksContext";
+import { useFilterContext } from "../../context/FilterContext";
 
 const SearchBar = () => {
   const [active, setActive] = useState(false);
-  const { value, setValue } = useTasksContext();
+  const { searchValue, setSearchValue, clearSearchValue } = useFilterContext();
 
   const changeStatus = () => setActive(!active);
 
-  const handleLocalValue = (e: any) => setValue(e.target.value);
+  const handleLocalValue = (e: any) => setSearchValue(e.target.value);
 
-  const handleClearValue = () => setValue("")
+  const handleClearValue = () => clearSearchValue()
+
+  console.log(searchValue);
 
   return (
     <SearchContainer>
@@ -24,10 +26,10 @@ const SearchBar = () => {
         onBlur={changeStatus}
         onFocus={changeStatus}
         onChange={handleLocalValue}
-        value={value}
+        value={searchValue}
         placeholder="Search items"
       />
-      {value !== "" ? (
+      {searchValue !== "" ? (
         <IconButton onClick={handleClearValue}>
           <CloseIcon size={25} />
         </IconButton>

@@ -9,11 +9,13 @@ import SearchBar from "../components/SearchBar";
 import TasksList from "../components/TasksList/index";
 import AddTaskBar from "../components/AddTaskBar";
 import FilterButtons from "../components/FilterButtons";
+import { FilterProvider } from "../context/FilterContext";
 
 function App() {
   return (
     <TasksProvider>
-      <ThemeProvider theme={mainTheme}>
+      <FilterProvider>
+        <ThemeProvider theme={mainTheme}>
         <Global theme={mainTheme}/>
           <Container>
             <Header />
@@ -25,7 +27,8 @@ function App() {
             <AddTaskBar />
             <TasksList />
           </Container>
-      </ThemeProvider>
+        </ThemeProvider>
+      </FilterProvider>
     </TasksProvider>
   );
 }
