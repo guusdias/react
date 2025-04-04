@@ -1,102 +1,96 @@
-import React, {
+import {
   createContext,
   useContext,
-  useState,
   ReactNode,
   useEffect,
+  useReducer,
+  Dispatch,
 } from "react";
-import ITasks, { FilterType } from "../types/ITasks";
+import { reducer } from "../hook/useReducer";
+import ITasks from "../types/ITasks";
 
-interface TasksContextProps {
+interface State {
   tasks: ITasks[];
-  addTask: (task: ITasks) => void;
-  removeTask: (taskId: string) => void;
-  completeTask: (taskId: string) => void;
-  searchTerm: string;
-  setSearchTerm: (term: string) => void;
-  clearSearch: () => void;
-  clearSearchTerm: () => void;
-  activeFilter: string;
-  handleFilterActive: (filter: FilterType) => void;
+  activeFilter: "unset" | "done" | "pending";
+  value: string;
+}
+
+interface Action {
+  type: string;
+  task?: ITasks;
+  id?: string;
+  searchTerm?: string;
+  isCompleted?: boolean;
+  filter?: "unset" | "done" | "pending";
+  searchValue?: string;
+}
+
+const initialState: State = {
+  tasks: JSON.parse(localStorage.getItem("tasks") || "[]") as ITasks[],
+  activeFilter: "unset",
+  value: "",
+};
+
+const TasksContext = createContext<{
+  tasks: ITasks[];
+  activeFilter: "unset" | "done" | "pending";
   clearFilter: () => void;
   value: string;
-  setValue: React.Dispatch<React.SetStateAction<string>>;
   handleClearValue: () => void;
-}
+}>({
+  tasks: [],
+  activeFilter: "unset",
+  clearFilter: () => {},
+  value: "",
+  handleClearValue: () => {},
+});
 
-const TasksContext = createContext<TasksContextProps>({} as TasksContextProps);
+const ActionContext = createContext<Dispatch<Action>>(() => {});
 
-interface TasksProviderProps {
-  children: ReactNode;
-}
+export const useTasksContext = () => {
+  const context = useContext(TasksContext);
+  if (!context) {
+    throw new Error("useTasksContext must be used within a TasksProvider");
+  }
+  return context;
+};
 
-export const useTasksContext = () => useContext(TasksContext);
+export const useTasksDispatch = () => {
+  const context = useContext(ActionContext);
+  if (!context) {
+    throw new Error("useTasksDispatch must be used within a TasksProvider");
+  }
+  return context;
+};
 
-export function TasksProvider({ children }: TasksProviderProps) {
-  const [tasks, setTasks] = useState<ITasks[]>(
-    JSON.parse(localStorage.getItem("tasks") || "[]")
-  );
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [activeFilter, setActiveFilter] = useState("unset");
-  const [value, setValue] = useState("");
+export function TasksProvider({ children }: { children: ReactNode }) {
+  const [state, dispatch] = useReducer(reducer, initialState);
 
   useEffect(() => {
-    localStorage.setItem("tasks", JSON.stringify(tasks));
-  }, [tasks]);
+    localStorage.setItem("tasks", JSON.stringify(state.tasks));
+  }, [state.tasks]);
 
-  const addTask = (task: ITasks) => setTasks([...tasks, task]);
+  const clearFilter = () => {
+    dispatch({ type: "SET_FILTER", filter: "unset" });
+  };
 
-  const removeTask = (taskId: string) =>
-    setTasks(tasks.filter((task) => task.id !== taskId));
+  const handleClearValue = () => {
+    dispatch({ type: "SET_SEARCH", searchValue: "" });
+  };
 
-  const clearSearch = () => setSearchTerm("");
-
-  const handleClearValue = () => setValue("");
-
-  const clearSearchTerm = () => setSearchTerm("");
-
-  function completeTask(taskId: string) {
-    setTasks(
-      tasks?.map((task) => {
-        if (task.id === taskId) {
-          return { ...task, isCompleted: !task.isCompleted };
-        }
-        return task;
-      })
-    );
-  }
-
-  function clearFilter() {
-    setActiveFilter("");
-    handleClearValue();
-  }
-
-  function handleFilterActive(nextFilter: FilterType) {
-    nextFilter === activeFilter
-      ? setActiveFilter("unset")
-      : setActiveFilter(nextFilter);
-  }
+  const contextValue = {
+    tasks: state.tasks,
+    activeFilter: state.activeFilter,
+    clearFilter,
+    value: state.value,
+    handleClearValue,
+  };
 
   return (
-    <TasksContext.Provider
-      value={{
-        tasks,
-        addTask,
-        removeTask,
-        searchTerm,
-        setSearchTerm,
-        clearSearch,
-        clearSearchTerm,
-        activeFilter,
-        handleFilterActive,
-        completeTask,
-        clearFilter,
-        value,
-        setValue,
-        handleClearValue,
-      }}
-    >
-      {children}
-    </TasksContext.Provider>
+    <ActionContext.Provider value={dispatch}>
+      <TasksContext.Provider value={contextValue}>
+        {children}
+      </TasksContext.Provider>
+    </ActionContext.Provider>
   );
 }

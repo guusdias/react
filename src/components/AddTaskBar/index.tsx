@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { AddTaskContainer, AddTaskForm, AddTaskInput, SubmitTaskButton } from "./styles";
 import { FaCirclePlus } from "react-icons/fa6";
-import { useTasksContext } from "../../context/TasksContext";
+import { useTasksDispatch } from "../../context/TasksContext";
 import { v4 as uuidv4 } from "uuid";
 
 const AddTaskBar = () => {
-  const { addTask } = useTasksContext();
+  const dispatch = useTasksDispatch();
   const [taskDescription, setTaskDescription] = useState("");
 
   const handleAddTask = (event: React.FormEvent<HTMLFormElement>) => {
@@ -16,7 +16,7 @@ const AddTaskBar = () => {
         description: taskDescription,
         isCompleted: false,
       };
-      addTask(newTask);
+      dispatch({ type: "ADD_TASK", task: newTask });
       setTaskDescription("");
     }
   };

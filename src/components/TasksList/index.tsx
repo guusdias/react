@@ -2,10 +2,12 @@ import { SectionCard } from "./styles";
 import { useTasksContext } from "../../context/TasksContext";
 import Card from "./Task";
 import NoResultsAlert from "../Alerts/index";
+import { useFilterContext } from "../../context/FilterContext";
 
 const TasksList = () => {
-  const { tasks, activeFilter, clearFilter, value, handleClearValue } =
+  const { tasks, value } =
     useTasksContext();
+  const { activeFilter, clearFilter, clearSearchValue, searchValue } = useFilterContext();
 
   const filteredTasks = tasks
     .filter((task) => {
@@ -14,7 +16,7 @@ const TasksList = () => {
       return true;
     })
     .filter((task) =>
-      task.description.toLowerCase().includes(value.toLowerCase())
+      task.description.toLowerCase().includes(searchValue.toLowerCase())
     );
 
   const noResults = filteredTasks.length === 0;
@@ -30,7 +32,7 @@ const TasksList = () => {
       {value && noResults && (
         <NoResultsAlert
           message="Your search found no results."
-          onClearFilter={handleClearValue}
+          onClearFilter={clearSearchValue}
         />
       )}
       {!noResults &&
